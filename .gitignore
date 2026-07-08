@@ -1,0 +1,40 @@
+# 環境変数(絶対にコミットしないこと)
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# SQLite DB
+*.db
+*.sqlite3
+
+# Node.js
+node_modules/
+.npm
+
+# React ビルド成果物
+server/client/dist/
+
+# テスト一時ファイル
+.pytest_cache/
+*.pytest_cache
+coverage/
+.coverage
+htmlcov/
+
+# エディタ・OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

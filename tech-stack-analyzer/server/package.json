@@ -1,0 +1,19 @@
+{
+  "name": "tech-stack-analyzer-server",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js",
+    "test": "node --test 'tests/*.test.js'"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.0",
+    "cors": "^2.8",
+    "dotenv": "^16.4",
+    "express": "^4.19",
+    "express-basic-auth": "^1.2",
+    "helmet": "^7.1",
+    "pg": "^8.12"
+  },
+  "devDependencies": {}
+}
