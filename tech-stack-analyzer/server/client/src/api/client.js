@@ -15,3 +15,18 @@ export const getRepos = (params) => request('/repos', params);
 export const getRepoDetail = (id) => request(`/repos/${id}`);
 export const getDependencies = (repoId, params) => request(`/dependencies/${repoId}`, params);
 export const getQiitaTrends = (params) => request('/qiita-trends', params);
+
+export async function postAnalyze(payload) {
+  const url = new URL(API_BASE + '/analyze', window.location.origin);
+  const res = await fetch(url, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || `API error: ${res.status}`);
+  }
+  return res.json();
+}
