@@ -1,5 +1,5 @@
-import React, { Suspense, lazy, useState } from 'react';
-import { postAnalyze } from '../api/client.js';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { postAnalyze, getRepos, getQiitaTrends } from '../api/client.js';
 import { riskColor, riskLevelLabel } from '../riskMeta.js';
 
 const GanttChart = lazy(() => import('../components/GanttChart.jsx'));
@@ -19,6 +19,15 @@ const S = {
     width: '100%', padding: '10px 12px', borderRadius: 8,
     background: '#0f172a', border: '1px solid #334155', color: '#f1f5f9', fontSize: 14,
   },
+  hint: { fontSize: 12, color: '#64748b', marginBottom: 8 },
+  chipGroup: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+  chip: (selected) => ({
+    display: 'inline-flex', alignItems: 'center', padding: '6px 14px', borderRadius: 9999,
+    fontSize: 13, cursor: 'pointer', userSelect: 'none',
+    border: `1px solid ${selected ? '#2563eb' : '#334155'}`,
+    background: selected ? '#1d4ed8' : 'transparent',
+    color: selected ? '#f1f5f9' : '#94a3b8',
+  }),
   button: {
     marginTop: 8, padding: '10px 20px', borderRadius: 8, border: 'none',
     background: '#2563eb', color: '#f1f5f9', fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -47,15 +56,38 @@ const S = {
   effortBasis: { fontSize: 13, color: '#94a3b8' },
 };
 
-const initialForm = { projectOverview: '', goals: '', candidateStack: '' };
+const initialForm = { projectOverview: '', goals: '', candidateStack: [] };
 
 export default function ProjectPlanner() {
   const [form, setForm] = useState(initialForm);
+  const [stackOptions, setStackOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
+  // 「候補の技術スタック」は自由記述にせず、実際にDBに存在する言語・Qiitaタグからのみ選ばせる。
+  // 自由記述だと表記揺れ(例: "react" vs "React")で照合に失敗してもユーザーに何も伝わらない
+  // (analyze.js側は完全一致でSQLのIN句に渡すため、サイレントに0件になる)。
+  useEffect(() => {
+    Promise.all([getRepos({ limit: 200 }), getQiitaTrends()])
+      .then(([repos, trends]) => {
+        const languages = repos.map((r) => r.primary_language).filter(Boolean);
+        const tags = trends.map((t) => t.tag).filter(Boolean);
+        setStackOptions([...new Set([...languages, ...tags])].sort());
+      })
+      .catch(() => setStackOptions([]));
+  }, []);
+
   const onChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const toggleStack = (value) => {
+    setForm((f) => ({
+      ...f,
+      candidateStack: f.candidateStack.includes(value)
+        ? f.candidateStack.filter((v) => v !== value)
+        : [...f.candidateStack, value],
+    }));
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -63,14 +95,10 @@ export default function ProjectPlanner() {
     setError(null);
     setResult(null);
     try {
-      const candidateStack = form.candidateStack
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
       const body = await postAnalyze({
         projectOverview: form.projectOverview,
         goals: form.goals,
-        ...(candidateStack.length ? { candidateStack } : {}),
+        ...(form.candidateStack.length ? { candidateStack: form.candidateStack } : {}),
       });
       setResult(body);
     } catch (err) {
@@ -95,6 +123,7 @@ export default function ProjectPlanner() {
             style={S.textarea}
             value={form.projectOverview}
             onChange={onChange('projectOverview')}
+            placeholder="例: 社内向けの経費精算SaaSを新規開発する。既存のExcel運用を置き換え、承認フローと領収書OCRを提供したい。"
             required
           />
         </div>
@@ -105,18 +134,35 @@ export default function ProjectPlanner() {
             style={S.textarea}
             value={form.goals}
             onChange={onChange('goals')}
+            placeholder="例: 半年以内にMVPをリリースし、月間の経費精算件数1,000件を無停止で処理できるようにする。"
             required
           />
         </div>
         <div style={S.field}>
-          <label style={S.label} htmlFor="candidateStack">候補の技術スタック(任意、カンマ区切り)</label>
-          <input
-            id="candidateStack"
-            style={S.input}
-            value={form.candidateStack}
-            onChange={onChange('candidateStack')}
-            placeholder="例: Python, React"
-          />
+          <div style={S.label}>候補の技術スタック(任意)</div>
+          {stackOptions.length > 0 ? (
+            <>
+              <p style={S.hint}>収集済みデータに存在する言語・技術のみ選べます(選ぶと分析結果の精度が上がります)</p>
+              <div role="group" aria-label="候補の技術スタック(任意)" style={S.chipGroup}>
+                {stackOptions.map((opt) => {
+                  const selected = form.candidateStack.includes(opt);
+                  return (
+                    <label key={opt} style={S.chip(selected)}>
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleStack(opt)}
+                        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                      />
+                      {opt}
+                    </label>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <p style={S.hint}>選択可能な候補を読み込み中、または収集済みデータがまだありません。未選択でも分析できます。</p>
+          )}
         </div>
         <button type="submit" style={{ ...S.button, ...(loading ? S.buttonDisabled : {}) }} disabled={loading}>
           {loading ? 'AIが分析中...(数秒〜数十秒かかります)' : '分析する'}

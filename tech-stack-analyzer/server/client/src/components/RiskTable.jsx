@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { riskColor } from '../riskMeta.js';
+import { riskColor, SCORE_META } from '../riskMeta.js';
 
 const COLS = [
   { key: 'owner', label: 'リポジトリ', render: (r) => `${r.owner}/${r.name}` },
   { key: 'primary_language', label: '言語' },
   { key: 'stars', label: 'Stars', render: (r) => r.stars?.toLocaleString() },
-  { key: 'total_score', label: '総合リスク', risk: true },
-  { key: 'bug_ratio_score', label: 'Bug' , risk: true },
-  { key: 'maintenance_score', label: 'メンテ', risk: true },
-  { key: 'churn_score', label: 'チャーン', risk: true },
+  // 色分け(riskColor)は総合リスクのみに適用する。Bug/メンテ/チャーンは個別の意味・閾値が
+  // 未整理なため、総合リスク用の閾値を流用した色付けはミスリードになる(中立色で数値のみ表示)。
+  { key: 'total_score', label: '総合リスク', risk: true, numeric: true, meta: 'total_score' },
+  { key: 'bug_ratio_score', label: 'Bug', numeric: true, meta: 'bug_ratio_score' },
+  { key: 'maintenance_score', label: 'メンテ', numeric: true, meta: 'maintenance_score' },
+  { key: 'churn_score', label: 'チャーン', numeric: true, meta: 'churn_score' },
 ];
 
 const S = {
@@ -43,7 +45,12 @@ export default function RiskTable({ rows, onRowClick }) {
           <tr>
             <th style={{ ...S.th, width: 32, textAlign: 'center' }}>#</th>
             {COLS.map((c) => (
-              <th key={c.key} style={S.th} onClick={() => toggleSort(c.key)}>
+              <th
+                key={c.key}
+                style={S.th}
+                onClick={() => toggleSort(c.key)}
+                title={c.meta ? SCORE_META[c.meta].description : undefined}
+              >
                 {c.label} {sort.key === c.key ? (sort.dir < 0 ? '▼' : '▲') : ''}
               </th>
             ))}

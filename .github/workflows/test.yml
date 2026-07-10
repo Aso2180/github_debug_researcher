@@ -1,0 +1,63 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  collector-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: tech-stack-analyzer/collector
+        run: pip install -e ".[dev]"
+
+      - name: Run pytest
+        working-directory: tech-stack-analyzer/collector
+        run: pytest
+
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install server dependencies
+        working-directory: tech-stack-analyzer/server
+        run: npm ci
+
+      - name: Run server tests
+        working-directory: tech-stack-analyzer/server
+        run: npm test
+
+  client-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install client dependencies
+        working-directory: tech-stack-analyzer/server/client
+        run: npm ci
+
+      - name: Run client tests
+        working-directory: tech-stack-analyzer/server/client
+        run: npm test
+
+      - name: Build client (catches build-time regressions, not just unit tests)
+        working-directory: tech-stack-analyzer/server/client
+        run: npm run build

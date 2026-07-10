@@ -39,6 +39,7 @@ function createFixture() {
   db.prepare(`INSERT INTO risk_scores VALUES (2,1,0.18,0.00,0.30,0.163,'2024-02-01')`).run();
   db.prepare(`INSERT INTO risk_scores VALUES (3,2,0.05,0.50,0.20,0.192,'2023-06-02')`).run();
   db.prepare(`INSERT INTO qiita_tag_trends VALUES (1,'python',250,3000,'2024-01-01','2024-01-31','2024-02-01')`).run();
+  db.prepare(`INSERT INTO qiita_tag_trends VALUES (2,'react',300,1200,'2024-01-01','2024-01-31','2024-02-01')`).run();
   db.close();
 }
 
@@ -170,6 +171,20 @@ test('POST /api/analyze は同一リポジトリのrisk_scoresが複数あって
   const occurrences = (prompt.match(/python-repo/g) || []).length;
   assert.equal(occurrences, 1, 'python-repo は根拠データ中に1回だけ出現するべき(重複排除)');
   assert.ok(prompt.includes('"total_score": 0.163'), '最新(calculated_at最大)のrisk_scoresが使われるべき');
+});
+
+test('POST /api/analyze は本文に含まれていなくてもcandidateStackで指定した語のQiitaトレンドを根拠データに含める', async () => {
+  mockAnthropicResponses([JSON.stringify(VALID_RESULT)]);
+  const res = await post({
+    projectOverview: 'モバイルアプリを作りたい',
+    goals: '高速に開発したい',
+    candidateStack: ['react'],
+  });
+  assert.equal(res.status, 200);
+
+  const sentBody = JSON.parse(fetchCalls[0].opts.body);
+  const prompt = sentBody.messages[0].content;
+  assert.ok(prompt.includes('"tag": "react"'), 'candidateStackで選んだ語のQiitaトレンドがプロンプトに含まれるべき');
 });
 
 after(() => {

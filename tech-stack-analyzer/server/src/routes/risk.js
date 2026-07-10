@@ -11,7 +11,8 @@ router.get('/risk-ranking', async (req, res, next) => {
       SELECT r.id, r.owner, r.name, r.primary_language, r.stars,
              rs.total_score, rs.bug_ratio_score, rs.maintenance_score, rs.churn_score
       FROM risk_scores rs
-      JOIN repositories r ON r.id = rs.repo_id`;
+      JOIN repositories r ON r.id = rs.repo_id
+        AND rs.calculated_at = (SELECT MAX(calculated_at) FROM risk_scores WHERE repo_id = r.id)`;
     if (language) {
       params.push(language);
       sql += ` WHERE r.primary_language = $${params.length}`;

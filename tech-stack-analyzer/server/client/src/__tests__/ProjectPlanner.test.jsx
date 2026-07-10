@@ -7,6 +7,8 @@ import ProjectPlanner from '../pages/ProjectPlanner.jsx';
 
 vi.mock('../api/client.js', () => ({
   postAnalyze: vi.fn(),
+  getRepos: vi.fn().mockResolvedValue([]),
+  getQiitaTrends: vi.fn().mockResolvedValue([]),
 }));
 
 // frappe-gantt はSVGをDOM操作で組み立てるため、jsdom上での描画検証はせず軽くモックする
@@ -27,6 +29,8 @@ const MOCK_RESULT = {
 
 beforeEach(() => {
   vi.mocked(apiClient.postAnalyze).mockReset();
+  vi.mocked(apiClient.getRepos).mockReset().mockResolvedValue([]);
+  vi.mocked(apiClient.getQiitaTrends).mockReset().mockResolvedValue([]);
 });
 
 async function fillAndSubmit(user, { overview = '概要', goals = 'ゴール' } = {}) {
@@ -73,17 +77,40 @@ test('API エラー時にエラーメッセージを表示する', async () => {
   expect(screen.getByText(/リクエストが多すぎます/)).toBeInTheDocument();
 });
 
-test('candidateStack はカンマ区切りで配列に変換して送信する', async () => {
+test('候補の技術スタックは実在データ由来のチップから選び、選択した分だけ配列で送信する', async () => {
   vi.mocked(apiClient.postAnalyze).mockResolvedValue(MOCK_RESULT);
+  vi.mocked(apiClient.getRepos).mockResolvedValue([
+    { id: 1, primary_language: 'Python' },
+    { id: 2, primary_language: 'TypeScript' },
+  ]);
+  vi.mocked(apiClient.getQiitaTrends).mockResolvedValue([{ tag: 'react' }]);
   const user = userEvent.setup();
   render(<ProjectPlanner />);
 
   await user.type(screen.getByLabelText('プロジェクト概要'), '概要');
   await user.type(screen.getByLabelText('ゴール'), 'ゴール');
-  await user.type(screen.getByLabelText(/候補の技術スタック/), 'Python, React');
+
+  await waitFor(() => expect(screen.getByLabelText('Python')).toBeInTheDocument());
+  await user.click(screen.getByLabelText('Python'));
+  await user.click(screen.getByLabelText('react'));
+  // 自由記述ではないため、実在しない語は選択肢にそもそも出てこない
+  expect(screen.queryByLabelText('Rust')).not.toBeInTheDocument();
+
   await user.click(screen.getByRole('button', { name: /分析する/ }));
 
   await waitFor(() => expect(apiClient.postAnalyze).toHaveBeenCalledWith(
-    expect.objectContaining({ candidateStack: ['Python', 'React'] })
+    expect.objectContaining({ candidateStack: ['Python', 'react'] })
+  ));
+});
+
+test('収集済みデータが無い場合は候補の技術スタックが無くても分析できる', async () => {
+  vi.mocked(apiClient.postAnalyze).mockResolvedValue(MOCK_RESULT);
+  const user = userEvent.setup();
+  render(<ProjectPlanner />);
+
+  await fillAndSubmit(user);
+
+  await waitFor(() => expect(apiClient.postAnalyze).toHaveBeenCalledWith(
+    expect.not.objectContaining({ candidateStack: expect.anything() })
   ));
 });

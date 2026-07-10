@@ -103,7 +103,12 @@ router.post('/analyze', analyzeRateLimiter, async (req, res, next) => {
     const matchedLanguages = Array.isArray(candidateStack) && candidateStack.length
       ? candidateStack.filter((s) => typeof s === 'string' && s.trim()).slice(0, 10)
       : extractKeywords(combinedText, knownLanguages);
-    const matchedTags = extractKeywords(combinedText, knownTags);
+    // candidateStack は「候補の技術スタック」欄で選ばれた語(実在のprimary_language/qiitaタグ由来)。
+    // 本文からの抽出だけでなくcandidateStackもQiitaタグ照合の対象にしないと、
+    // 「候補にReactを選んだのに本文に書き忘れるとReactのQiitaトレンドが一切分析に使われない」
+    // という非対称なサイレント失敗が起きる。
+    const candidateStackText = Array.isArray(candidateStack) ? candidateStack.join(' ') : '';
+    const matchedTags = extractKeywords(`${combinedText} ${candidateStackText}`, knownTags);
 
     const params = [];
     let repoSql = `SELECT r.id, r.owner, r.name, r.primary_language, r.stars, r.last_pushed_at,
