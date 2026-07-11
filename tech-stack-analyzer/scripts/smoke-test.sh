@@ -24,7 +24,12 @@ DASHBOARD_PASSWORD="${3:?dashboard_password が必要です}"
 shift 3
 EXPECTED_STRINGS=("$@")
 if [ ${#EXPECTED_STRINGS[@]} -eq 0 ]; then
-  EXPECTED_STRINGS=("プランナー" "ダッシュボード" "リスクランキング")
+  # Phase 2(Qiita記事リンク・バブルチャート・言語関係グラフ)で追加した画面のUI文字列も含める。
+  # 13章の「本番だけ新画面が表示されない」事故の再発防止(0.横断的な実装ルール参照)。
+  EXPECTED_STRINGS=(
+    "プランナー" "ダッシュボード" "リスクランキング"
+    "関連Qiita記事" "リスク分布バブルチャート" "言語関係グラフ"
+  )
 fi
 
 FAIL=0
@@ -51,6 +56,7 @@ check_status "認証あり /api/repos は200" 200 -u "$DASHBOARD_USER:$DASHBOARD
 echo "=== 3. フロントの配信ルート ==="
 check_status "/ は200" 200 "$BASE_URL/"
 check_status "/planner は200(SPAフォールバック)" 200 "$BASE_URL/planner"
+check_status "/language-graph は200(SPAフォールバック)" 200 "$BASE_URL/language-graph"
 
 echo "=== 4. 配信されているJSバンドルの中身を実際に検証(ステータスコードだけで判断しない) ==="
 INDEX_HTML=$(curl -s "$BASE_URL/")

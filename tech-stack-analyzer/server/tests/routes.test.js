@@ -37,6 +37,11 @@ function createFixture() {
       id INTEGER PRIMARY KEY, tag TEXT, article_count INTEGER, total_likes INTEGER,
       period_start TEXT, period_end TEXT, fetched_at TEXT
     );
+    CREATE TABLE qiita_articles (
+      id INTEGER PRIMARY KEY, qiita_id TEXT, tag TEXT, title TEXT, url TEXT,
+      likes_count INTEGER, article_created_at TEXT, fetched_at TEXT,
+      UNIQUE(qiita_id, tag)
+    );
     CREATE TABLE risk_scores (
       id INTEGER PRIMARY KEY, repo_id INTEGER,
       bug_ratio_score REAL, maintenance_score REAL, churn_score REAL,
@@ -58,6 +63,10 @@ function createFixture() {
   db.prepare(`INSERT INTO risk_scores VALUES (3,1,0.18,0.00,0.30,0.163,'2024-01-02')`).run();
   db.prepare(`INSERT INTO risk_scores VALUES (2,2,0.05,0.50,0.20,0.192,'2023-06-02')`).run();
   db.prepare(`INSERT INTO qiita_tag_trends VALUES (1,'python',250,3000,'2024-01-01','2024-01-31','2024-02-01')`).run();
+  // primary_language='Python'(先頭大文字)に対し、tagはQiita側の表記そのまま('python'小文字)で
+  // 保存される想定。大文字小文字を無視して突き合わせられることを検証するためのフィクスチャ。
+  db.prepare(`INSERT INTO qiita_articles VALUES (1,'q1','python','Pythonの型ヒント入門','https://qiita.com/a/items/q1',10,'2024-01-01','2024-01-02')`).run();
+  db.prepare(`INSERT INTO qiita_articles VALUES (2,'q2','python','asyncioまとめ','https://qiita.com/b/items/q2',5,'2024-01-01','2024-01-02')`).run();
   db.close();
 }
 
@@ -183,6 +192,55 @@ test('GET /api/qiita-trends は Qiita トレンドを返す', async () => {
   assert.equal(res.status, 200);
   const body = await res.json();
   assert.ok(body.length >= 1);
+});
+
+test('GET /api/risk-ranking は primary_language(大文字始まり)とqiita_articles.tag(小文字)を大小文字無視で突き合わせる', async () => {
+  const res = await get('/api/risk-ranking?language=Python');
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  const repo1 = body.find((r) => r.id === 1);
+  assert.ok(Array.isArray(repo1.qiitaArticles));
+  assert.equal(repo1.qiitaArticles.length, 2);
+  assert.ok(repo1.qiitaArticles.every((a) => typeof a.title === 'string' && typeof a.url === 'string'));
+});
+
+test('GET /api/risk-ranking はマッチするQiita記事が無い言語ではqiitaArticlesが空配列', async () => {
+  const res = await get('/api/risk-ranking?language=TypeScript');
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.ok(body.every((r) => Array.isArray(r.qiitaArticles) && r.qiitaArticles.length === 0));
+});
+
+test('GET /api/language-graph はprimary_language毎のノードを平均リスクスコア付きで返す', async () => {
+  const res = await get('/api/language-graph');
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  const python = body.nodes.find((n) => n.language === 'Python');
+  const ts = body.nodes.find((n) => n.language === 'TypeScript');
+  assert.equal(python.repoCount, 1);
+  // repo1のrisk_scoresは2行あるが、MAX(calculated_at)の最新行(0.163)がノードの平均に使われるべき
+  assert.equal(python.avgRisk, 0.163);
+  assert.equal(ts.avgRisk, 0.192);
+});
+
+test('GET /api/language-graph は依存関係のecosystemから言語間エッジを推定し、同一言語(pypi→Python)は除外する', async () => {
+  const res = await get('/api/language-graph');
+  const body = await res.json();
+  // repo1(Python)はnpmパッケージ(left-pad)に依存 -> ノード集合に存在するTypeScriptへのエッジになる
+  const edge = body.edges.find(
+    (e) => [e.source, e.target].sort().join(',') === ['Python', 'TypeScript'].sort().join(',')
+  );
+  assert.ok(edge, 'Python-TypeScript間のエッジが存在するべき');
+  assert.equal(edge.weight, 1);
+  // pypi(自言語)からのPython-Python自己ループは含まれない
+  assert.equal(body.edges.some((e) => e.source === 'Python' && e.target === 'Python'), false);
+  // go ecosystemはノード集合にGoが存在しないため無視される
+  assert.equal(body.edges.some((e) => e.source === 'Go' || e.target === 'Go'), false);
+});
+
+test('GET /api/language-graph は認証なしで401を返す', async () => {
+  const res = await fetch(`${BASE}/api/language-graph`);
+  assert.equal(res.status, 401);
 });
 
 test('GET /api/risk-ranking は不正な認証情報で 401 を返す', async () => {

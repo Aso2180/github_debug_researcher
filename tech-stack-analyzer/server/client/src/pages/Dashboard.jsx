@@ -2,16 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getRiskRanking } from '../api/client.js';
 import LanguageSummaryCard from '../components/LanguageSummaryCard.jsx';
+import RiskBubbleChart from '../components/RiskBubbleChart.jsx';
 
 const S = {
   page: { padding: 32 },
   title: { fontSize: 22, fontWeight: 700, marginBottom: 8, color: '#f1f5f9' },
   sub: { color: '#64748b', marginBottom: 24, fontSize: 14 },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 32 },
   err: { color: '#f87171', padding: 16 },
 };
 
 export default function Dashboard() {
+  const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +22,7 @@ export default function Dashboard() {
   useEffect(() => {
     getRiskRanking({ limit: 200 })
       .then((rows) => {
+        setRows(rows);
         const map = {};
         rows.forEach((r) => {
           const lang = r.primary_language || '(不明)';
@@ -55,6 +58,7 @@ export default function Dashboard() {
           />
         ))}
       </div>
+      <RiskBubbleChart rows={rows} />
     </div>
   );
 }

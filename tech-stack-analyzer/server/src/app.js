@@ -11,6 +11,7 @@ import riskRouter from './routes/risk.js';
 import dependenciesRouter from './routes/dependencies.js';
 import qiitaTrendsRouter from './routes/qiitaTrends.js';
 import analyzeRouter from './routes/analyze.js';
+import languageGraphRouter from './routes/languageGraph.js';
 import { query } from './db/pool.js';
 import { PORT } from './config.js';
 
@@ -35,6 +36,7 @@ app.use('/api', authMiddleware, riskRouter);
 app.use('/api', authMiddleware, dependenciesRouter);
 app.use('/api', authMiddleware, qiitaTrendsRouter);
 app.use('/api', authMiddleware, analyzeRouter);
+app.use('/api', authMiddleware, languageGraphRouter);
 
 // 本番: React ビルド成果物を静的配信
 const clientDist = path.join(__dirname, '../client/dist');

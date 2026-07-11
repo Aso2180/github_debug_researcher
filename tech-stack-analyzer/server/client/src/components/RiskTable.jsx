@@ -23,7 +23,62 @@ const S = {
   },
   td: { padding: '10px 14px', fontSize: 13, borderBottom: '1px solid #1e293b' },
   row: { cursor: 'pointer' },
+  qiitaBadge: {
+    display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px',
+    borderRadius: 9999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+    background: '#1e293b', color: '#93c5fd', border: '1px solid #334155', whiteSpace: 'nowrap',
+  },
+  qiitaBadgeMuted: { fontSize: 12, color: '#475569' },
+  qiitaPopover: {
+    position: 'absolute', zIndex: 20, marginTop: 4, background: '#0f172a',
+    border: '1px solid #334155', borderRadius: 8, padding: 8, minWidth: 240,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+  },
+  qiitaPopoverItem: {
+    display: 'block', padding: '6px 8px', fontSize: 12, color: '#93c5fd',
+    textDecoration: 'none', borderRadius: 4,
+  },
 };
+
+// 記事本文は一切表示・保存しない(著作権配慮)。タイトルとURLのみをポップオーバーに表示する。
+function QiitaBadge({ articles = [] }) {
+  const [open, setOpen] = useState(false);
+
+  if (articles.length === 0) {
+    return <span style={S.qiitaBadgeMuted}>関連記事なし</span>;
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <span
+        style={S.qiitaBadge}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+      >
+        関連Qiita記事 ({articles.length}件)
+      </span>
+      {open && (
+        <div style={S.qiitaPopover} onClick={(e) => e.stopPropagation()}>
+          {articles.map((a, i) => (
+            <a
+              key={i}
+              href={a.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={S.qiitaPopoverItem}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#1e293b')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            >
+              {a.title}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function RiskTable({ rows, onRowClick }) {
   const [sort, setSort] = useState({ key: 'total_score', dir: -1 });
@@ -54,6 +109,7 @@ export default function RiskTable({ rows, onRowClick }) {
                 {c.label} {sort.key === c.key ? (sort.dir < 0 ? '▼' : '▲') : ''}
               </th>
             ))}
+            <th style={{ ...S.th, cursor: 'default' }}>関連Qiita記事</th>
           </tr>
         </thead>
         <tbody>
@@ -71,6 +127,9 @@ export default function RiskTable({ rows, onRowClick }) {
                   {c.render ? c.render(r) : c.risk ? Number(r[c.key]).toFixed(3) : r[c.key]}
                 </td>
               ))}
+              <td style={S.td}>
+                <QiitaBadge articles={r.qiitaArticles} />
+              </td>
             </tr>
           ))}
         </tbody>

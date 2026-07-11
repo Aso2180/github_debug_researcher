@@ -93,6 +93,21 @@ class QiitaTagTrend(Base):
     fetched_at = Column(DateTime, default=utcnow)
 
 
+class QiitaArticle(Base):
+    __tablename__ = "qiita_articles"
+
+    id = Column(Integer, primary_key=True)
+    qiita_id = Column(String(64), nullable=False)
+    tag = Column(String(100), nullable=False)
+    title = Column(String(255))
+    url = Column(String(500))
+    likes_count = Column(Integer)
+    article_created_at = Column(DateTime)
+    fetched_at = Column(DateTime, default=utcnow)
+
+    __table_args__ = (UniqueConstraint("qiita_id", "tag", name="uq_qiita_id_tag"),)
+
+
 class RiskScore(Base):
     __tablename__ = "risk_scores"
 
