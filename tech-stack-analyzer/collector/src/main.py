@@ -8,11 +8,13 @@ import logging
 
 from src.clients.github_client import GitHubClient
 from src.clients.qiita_client import QiitaClient
+from src.clients.anthropic_client import AnthropicClient
 from src.collectors.repo_collector import collect_repositories_for_language
 from src.collectors.dependency_collector import collect_dependencies
 from src.collectors.qiita_trend_collector import collect_qiita_trends_for_tags
 from src.analysis.risk_score import calculate_and_save_risk_score
-from src.config import GITHUB_TOKEN, QIITA_TOKEN, GITHUB_SEARCH_MIN_INTERVAL_SEC
+from src.analysis.qiita_ai_review import generate_reviews_for_tags
+from src.config import GITHUB_TOKEN, QIITA_TOKEN, ANTHROPIC_API_KEY, GITHUB_SEARCH_MIN_INTERVAL_SEC
 from src.db.session import get_engine, init_db, get_session_factory
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -74,7 +76,18 @@ def run(languages: list[str], min_stars: int, max_repos: int, max_packages: int 
         if qiita_tags:
             logger.info("=== Qiitaトレンド収集を開始: %s ===", qiita_tags)
             qiita_client = QiitaClient(token=QIITA_TOKEN)
-            collect_qiita_trends_for_tags(session, qiita_client, qiita_tags, max_pages=qiita_max_pages)
+            collected_trends = collect_qiita_trends_for_tags(
+                session, qiita_client, qiita_tags, max_pages=qiita_max_pages
+            )
+
+            if ANTHROPIC_API_KEY:
+                logger.info("=== Qiita週次AIレビュー(定点観測)を開始 ===")
+                anthropic_client = AnthropicClient(api_key=ANTHROPIC_API_KEY)
+                reviewed_tags = [t.tag for t in collected_trends]
+                reviews = generate_reviews_for_tags(session, reviewed_tags, anthropic_client)
+                logger.info("AIレビュー%d件を生成しました", len(reviews))
+            else:
+                logger.info("ANTHROPIC_API_KEY未設定のためQiita週次AIレビューをスキップします")
     finally:
         session.close()
 

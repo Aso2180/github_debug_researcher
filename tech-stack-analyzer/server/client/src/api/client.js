@@ -19,6 +19,8 @@ export const getLanguageGraph = () => request('/language-graph');
 export const getUseCaseCategories = () => request('/usecase-categories');
 export const getPatternsForCategory = (slug) => request(`/usecase-categories/${slug}/patterns`);
 export const getArchitecturePattern = (slug) => request(`/architecture-patterns/${slug}`);
+export const getQiitaReviews = () => request('/qiita-reviews');
+export const getQiitaReviewHistory = (tag) => request(`/qiita-reviews/${tag}`);
 
 export async function postAnalyze(payload) {
   const url = new URL(API_BASE + '/analyze', window.location.origin);

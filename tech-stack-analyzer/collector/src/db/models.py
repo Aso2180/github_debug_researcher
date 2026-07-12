@@ -108,6 +108,19 @@ class QiitaArticle(Base):
     __table_args__ = (UniqueConstraint("qiita_id", "tag", name="uq_qiita_id_tag"),)
 
 
+class QiitaAIReview(Base):
+    __tablename__ = "qiita_ai_reviews"
+
+    id = Column(Integer, primary_key=True)
+    tag = Column(String(100), nullable=False)
+    summary = Column(Text, nullable=False)
+    trend_direction = Column(String(20))  # 'rising' | 'falling' | 'stable'
+    data_points_count = Column(Integer)
+    # 同じtagの直前のレビューへの自己参照。AIに「前回の自分の分析」を踏まえさせる定点観測の連鎖を表す。
+    previous_review_id = Column(Integer, ForeignKey("qiita_ai_reviews.id"), nullable=True)
+    created_at = Column(DateTime, default=utcnow)
+
+
 class UseCaseCategory(Base):
     __tablename__ = "use_case_categories"
 

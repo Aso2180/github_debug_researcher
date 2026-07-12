@@ -19,8 +19,8 @@ def test_seed_inserts_all_categories_patterns_and_components():
     patterns = session.query(ArchitecturePattern).all()
     components = session.query(ArchitecturePatternComponent).all()
 
-    assert len(categories) == 2
-    assert len(patterns) == 4
+    assert len(categories) == 6
+    assert len(patterns) == 12
     expected_component_count = sum(
         len(p["components"]) for c in CATEGORIES for p in c["patterns"]
     )
@@ -41,8 +41,8 @@ def test_seed_is_idempotent_on_rerun():
     seed(session)
     session.commit()
 
-    assert session.query(UseCaseCategory).count() == 2
-    assert session.query(ArchitecturePattern).count() == 4
+    assert session.query(UseCaseCategory).count() == 6
+    assert session.query(ArchitecturePattern).count() == 12
     expected_component_count = sum(
         len(p["components"]) for c in CATEGORIES for p in c["patterns"]
     )

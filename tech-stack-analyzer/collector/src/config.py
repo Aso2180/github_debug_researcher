@@ -6,6 +6,8 @@ load_dotenv(find_dotenv())
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 QIITA_TOKEN = os.getenv("QIITA_TOKEN", "")
+# 未設定の場合はQiita週次AIレビュー(定点観測)をスキップする(GITHUB_TOKENと同じオプトイン方式)
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
 # 開発時はSQLite、本番はDATABASE_URL(PostgreSQL)を環境変数で上書きする
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tech_stack.db")

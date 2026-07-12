@@ -7,6 +7,7 @@ import ProjectPlanner from './pages/ProjectPlanner.jsx';
 import LanguageGraph from './pages/LanguageGraph.jsx';
 import Guide from './pages/Guide.jsx';
 import Reading from './pages/Reading.jsx';
+import QiitaReviews from './pages/QiitaReviews.jsx';
 
 const NAV_H = 56;
 
@@ -38,6 +39,9 @@ function Nav() {
       <NavLink to="/language-graph">言語関係グラフ</NavLink>
       <NavLink to="/risk-ranking">リスクランキング</NavLink>
       <NavLink to="/">ダッシュボード</NavLink>
+      {/* ユースケース選択のジャーニーとは別系統の「定点観測」機能のため、JourneyNavには含めず
+          独立したナビ項目として置く */}
+      <NavLink to="/qiita-reviews">Qiitaトレンドレビュー</NavLink>
     </nav>
   );
 }
@@ -55,6 +59,7 @@ export default function App() {
           <Route path="/language-graph" element={<LanguageGraph />} />
           <Route path="/planner" element={<ProjectPlanner />} />
           <Route path="/guide" element={<Guide />} />
+          <Route path="/qiita-reviews" element={<QiitaReviews />} />
         </Routes>
       </div>
     </BrowserRouter>
