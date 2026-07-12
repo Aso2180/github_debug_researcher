@@ -5,8 +5,9 @@ import {
   getPatternsForCategory,
   getArchitecturePattern,
 } from '../api/client.js';
-import { riskColor } from '../riskMeta.js';
+import { riskColor, SCORE_META } from '../riskMeta.js';
 import JourneyNav from '../components/JourneyNav.jsx';
+import RiskLegend from '../components/RiskLegend.jsx';
 
 const LAYER_LABELS = {
   frontend: 'フロントエンド',
@@ -41,9 +42,15 @@ const S = {
   componentCard: {
     background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '12px 16px', marginBottom: 8,
   },
-  componentName: { fontWeight: 700, color: '#f1f5f9', marginBottom: 6 },
+  componentName: { fontWeight: 700, color: '#f1f5f9', marginBottom: 4 },
+  componentDesc: { fontSize: 12, color: '#94a3b8', lineHeight: 1.5, marginBottom: 8 },
+  repoGroupLabel: { fontSize: 11, color: '#64748b', marginTop: 6, marginBottom: 2 },
   repoRow: { display: 'flex', justifyContent: 'space-between', fontSize: 13, padding: '3px 0', color: '#cbd5e1' },
   emptyNote: { fontSize: 12, color: '#475569', fontStyle: 'italic' },
+  scoreNote: {
+    display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+    fontSize: 12, color: '#94a3b8', marginBottom: 16, lineHeight: 1.6,
+  },
   riskNotes: {
     background: '#1e293b', border: '1px solid #334155', borderRadius: 8,
     padding: '14px 16px', fontSize: 13, color: '#cbd5e1', lineHeight: 1.7, whiteSpace: 'pre-wrap',
@@ -178,32 +185,53 @@ export default function Guide() {
 
           <div style={S.section}>
             <div style={S.sectionTitle}>構成要素</div>
+            <div style={S.scoreNote}>
+              <span>
+                各コンポーネントの下にある数値は、実際に収集したGitHubリポジトリの<b>総合リスクスコア</b>
+                (0〜1、{SCORE_META.total_score.description})です。上段は該当言語のリスク上位、下段はリスク下位の
+                実例で、あくまで実在するリポジトリのサンプルです(そのコンポーネント自体の評価ではありません)。
+              </span>
+              <RiskLegend />
+            </div>
             {Object.entries(componentsByLayer).map(([layer, comps]) => (
               <div key={layer} style={S.layerGroup}>
                 <div style={S.layerLabel}>{LAYER_LABELS[layer] || layer}</div>
                 {comps.map((c) => (
                   <div key={c.id} style={S.componentCard}>
                     <div style={S.componentName}>{c.component_name}</div>
+                    {c.description && <div style={S.componentDesc}>{c.description}</div>}
                     {c.topRiskRepos.length === 0 && c.bottomRiskRepos.length === 0 ? (
-                      <div style={S.emptyNote}>該当する実リポジトリデータはまだありません</div>
+                      <div style={S.emptyNote}>
+                        該当する実リポジトリデータはまだありません(収集対象言語に一致するものが現時点で無いため)
+                      </div>
                     ) : (
                       <>
-                        {c.topRiskRepos.map((r) => (
-                          <div key={`top-${r.id}`} style={S.repoRow}>
-                            <span>{r.owner}/{r.name}</span>
-                            <span style={{ color: riskColor(Number(r.total_score)) }}>
-                              {Number(r.total_score).toFixed(3)}
-                            </span>
-                          </div>
-                        ))}
-                        {c.bottomRiskRepos.map((r) => (
-                          <div key={`bottom-${r.id}`} style={S.repoRow}>
-                            <span>{r.owner}/{r.name}</span>
-                            <span style={{ color: riskColor(Number(r.total_score)) }}>
-                              {Number(r.total_score).toFixed(3)}
-                            </span>
-                          </div>
-                        ))}
+                        {c.topRiskRepos.length > 0 && (
+                          <>
+                            <div style={S.repoGroupLabel}>実データ: 該当リポジトリ(リスク上位)</div>
+                            {c.topRiskRepos.map((r) => (
+                              <div key={`top-${r.id}`} style={S.repoRow}>
+                                <span>{r.owner}/{r.name}</span>
+                                <span style={{ color: riskColor(Number(r.total_score)) }}>
+                                  {Number(r.total_score).toFixed(3)}
+                                </span>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                        {c.bottomRiskRepos.length > 0 && (
+                          <>
+                            <div style={S.repoGroupLabel}>実データ: 該当リポジトリ(リスク下位)</div>
+                            {c.bottomRiskRepos.map((r) => (
+                              <div key={`bottom-${r.id}`} style={S.repoRow}>
+                                <span>{r.owner}/{r.name}</span>
+                                <span style={{ color: riskColor(Number(r.total_score)) }}>
+                                  {Number(r.total_score).toFixed(3)}
+                                </span>
+                              </div>
+                            ))}
+                          </>
+                        )}
                       </>
                     )}
                     {c.qiitaArticles.length > 0 && (

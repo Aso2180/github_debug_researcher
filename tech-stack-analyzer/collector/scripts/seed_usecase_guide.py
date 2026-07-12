@@ -42,11 +42,31 @@ CATEGORIES = [
                 ),
                 "display_order": 1,
                 "components": [
-                    {"layer": "frontend", "component_name": "TypeScript/Next.js", "description": None},
-                    {"layer": "frontend", "component_name": "Tailwind CSS", "description": None},
-                    {"layer": "datastore", "component_name": "PostgreSQL (Supabase)", "description": None},
-                    {"layer": "infra", "component_name": "Vercel", "description": None},
-                    {"layer": "security", "component_name": "Supabase Auth + RLS", "description": None},
+                    {
+                        "layer": "frontend", "component_name": "TypeScript/Next.js",
+                        "description": "フロントとバックエンドを同一言語(TypeScript)で書けるWebフレームワーク。"
+                                        "個人開発〜小規模チームで採用されることが多い定番の組み合わせ。",
+                    },
+                    {
+                        "layer": "frontend", "component_name": "Tailwind CSS",
+                        "description": "ユーティリティクラスをHTMLに直接記述するCSSフレームワーク。"
+                                        "Next.jsと組み合わせて使われることが多い。",
+                    },
+                    {
+                        "layer": "datastore", "component_name": "PostgreSQL (Supabase)",
+                        "description": "SupabaseはPostgreSQL・認証・API機能をまとめて提供するオープンソースの"
+                                        "バックエンド基盤。個人開発〜小規模SaaSでよく使われる。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Vercel",
+                        "description": "Next.jsアプリのホスティングに強いサーバーレスプラットフォーム。"
+                                        "デプロイの手軽さから個人開発でよく使われるが、無料枠超過時のコスト急増に注意。",
+                    },
+                    {
+                        "layer": "security", "component_name": "Supabase Auth + RLS",
+                        "description": "Supabase提供の認証機能と、PostgreSQLのRow Level Security(行単位アクセス制御)。"
+                                        "マルチテナントのデータ分離によく使われる。",
+                    },
                 ],
             },
             {
@@ -62,11 +82,31 @@ CATEGORIES = [
                 ),
                 "display_order": 2,
                 "components": [
-                    {"layer": "frontend", "component_name": "React/TypeScript", "description": None},
-                    {"layer": "backend", "component_name": "Node.js", "description": None},
-                    {"layer": "datastore", "component_name": "PostgreSQL", "description": None},
-                    {"layer": "infra", "component_name": "Docker", "description": None},
-                    {"layer": "infra", "component_name": "Kubernetes", "description": None},
+                    {
+                        "layer": "frontend", "component_name": "React/TypeScript",
+                        "description": "フロントエンド開発で最も広く使われるライブラリ。エコシステム・人材の"
+                                        "採用しやすさから、チーム開発で定番の選択肢になっている。",
+                    },
+                    {
+                        "layer": "backend", "component_name": "Node.js",
+                        "description": "JavaScript/TypeScriptでサーバーサイドを書けるランタイム。フロントと"
+                                        "言語を揃えたいチームで採用されることが多い。",
+                    },
+                    {
+                        "layer": "datastore", "component_name": "PostgreSQL",
+                        "description": "オープンソースのリレーショナルデータベース。中〜大規模システムで"
+                                        "広く採用される、実績豊富な選択肢。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Docker",
+                        "description": "アプリケーションをコンテナ化する技術。環境差異を無くせるため、"
+                                        "チーム開発・本番運用で標準的に使われる。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Kubernetes",
+                        "description": "複数のコンテナを運用するオーケストレーション基盤。大規模・多サービスの"
+                                        "運用に向く一方、学習・運用コストが高くPMF前の段階では過剰になりやすい。",
+                    },
                 ],
             },
         ],
@@ -89,9 +129,21 @@ CATEGORIES = [
                 ),
                 "display_order": 1,
                 "components": [
-                    {"layer": "infra", "component_name": "Zapier", "description": None},
-                    {"layer": "infra", "component_name": "Make", "description": None},
-                    {"layer": "infra", "component_name": "Power Automate (クラウドフロー)", "description": None},
+                    {
+                        "layer": "infra", "component_name": "Zapier",
+                        "description": "ノーコードでクラウドサービス同士を連携できるiPaaSの代表格。"
+                                        "非エンジニアでも設定しやすく、個人〜中小企業でよく使われる。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Make",
+                        "description": "Zapierと同種のiPaaS(旧Integromat)。より複雑な分岐・ワークフローを"
+                                        "ビジュアルに組める点が特徴。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Power Automate (クラウドフロー)",
+                        "description": "Microsoft製のiPaaS。Microsoft 365(Teams/SharePoint等)との連携に強く、"
+                                        "既にMicrosoft製品を使っている企業で採用されやすい。",
+                    },
                 ],
             },
             {
@@ -107,9 +159,21 @@ CATEGORIES = [
                 ),
                 "display_order": 2,
                 "components": [
-                    {"layer": "infra", "component_name": "UiPath", "description": None},
-                    {"layer": "infra", "component_name": "Power Automate Desktop", "description": None},
-                    {"layer": "infra", "component_name": "AI-OCR", "description": None},
+                    {
+                        "layer": "infra", "component_name": "UiPath",
+                        "description": "画面操作を自動化するRPA(Robotic Process Automation)ツールの代表格。"
+                                        "エンタープライズでの導入実績が多い。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "Power Automate Desktop",
+                        "description": "Microsoft製のデスクトップRPA。クラウドフロー(iPaaS)と組み合わせて"
+                                        "使われることが多い。",
+                    },
+                    {
+                        "layer": "infra", "component_name": "AI-OCR",
+                        "description": "紙帳票・画像から文字を認識してデータ化する技術。RPAと組み合わせて"
+                                        "非定型文書処理(請求書・帳票等)の自動化に使われる。",
+                    },
                 ],
             },
         ],

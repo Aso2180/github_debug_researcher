@@ -30,12 +30,14 @@ function Nav() {
   return (
     <nav style={navStyle}>
       <span style={{ color: '#e2e8f0', fontWeight: 700, marginRight: 8 }}>🔍 Tech Stack Analyzer</span>
+      {/* ナビの並び順はジャーニー(はじめに→ガイド→プランナー→言語グラフ→リスクランキング→ダッシュボード)
+          と一致させる。以前は無関係な順序だったため、ジャーニーと矛盾しユーザーが混乱していた。 */}
       <NavLink to="/reading">はじめに</NavLink>
-      <NavLink to="/">ダッシュボード</NavLink>
-      <NavLink to="/risk-ranking">リスクランキング</NavLink>
-      <NavLink to="/language-graph">言語関係グラフ</NavLink>
-      <NavLink to="/planner">プランナー</NavLink>
       <NavLink to="/guide">アーキテクチャガイド</NavLink>
+      <NavLink to="/planner">プランナー</NavLink>
+      <NavLink to="/language-graph">言語関係グラフ</NavLink>
+      <NavLink to="/risk-ranking">リスクランキング</NavLink>
+      <NavLink to="/">ダッシュボード</NavLink>
     </nav>
   );
 }
