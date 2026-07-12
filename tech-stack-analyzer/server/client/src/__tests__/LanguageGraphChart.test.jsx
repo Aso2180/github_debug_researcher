@@ -58,6 +58,22 @@ test('maxRiskが高いノードには要注意リングが描画される(平均
   expect(rubyGroup.querySelectorAll('circle').length).toBe(1);
 });
 
+test('highlightLanguagesに含まれる言語には青いジャーニーハイライトリングが描画される', () => {
+  const nodes = [
+    { language: 'Python', repoCount: 10, avgRisk: 0.2, minRisk: 0.1, maxRisk: 0.2 },
+    { language: 'Ruby', repoCount: 5, avgRisk: 0.2, minRisk: 0.15, maxRisk: 0.25 },
+  ];
+  render(
+    <LanguageGraphChart nodes={nodes} edges={[]} onNodeClick={() => {}} highlightLanguages={['Python']} />
+  );
+  const pythonGroup = screen.getByText('Python').closest('g');
+  const rubyGroup = screen.getByText('Ruby').closest('g');
+  // Pythonはハイライト対象なので基本circle+青リングの2つ、Rubyはハイライト対象外で1つのまま
+  expect(pythonGroup.querySelectorAll('circle').length).toBe(2);
+  expect(pythonGroup.querySelector('circle[stroke="#60a5fa"]')).not.toBeNull();
+  expect(rubyGroup.querySelectorAll('circle').length).toBe(1);
+});
+
 function parseTranslate(g) {
   const m = g.getAttribute('transform').match(/translate\(([-\d.]+),\s*([-\d.]+)\)/);
   return { x: Number(m[1]), y: Number(m[2]) };

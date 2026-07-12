@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { getRiskRanking } from '../api/client.js';
+import { getRiskRanking, getArchitecturePattern } from '../api/client.js';
 import RiskTable from '../components/RiskTable.jsx';
 import RiskLegend from '../components/RiskLegend.jsx';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 const S = {
   page: { padding: 32 },
@@ -13,6 +14,10 @@ const S = {
     padding: '2px 10px', borderRadius: 9999, fontWeight: 600,
   },
   err: { color: '#f87171', padding: 16 },
+  banner: {
+    background: '#1e293b', border: '1px solid #334155', borderRadius: 8,
+    padding: '12px 16px', fontSize: 13, color: '#93c5fd', marginBottom: 16, lineHeight: 1.6,
+  },
 };
 
 export default function RiskRanking() {
@@ -22,6 +27,8 @@ export default function RiskRanking() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const language = searchParams.get('language') || '';
+  const patternSlug = searchParams.get('pattern');
+  const [patternDetail, setPatternDetail] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -32,6 +39,11 @@ export default function RiskRanking() {
       .finally(() => setLoading(false));
   }, [language]);
 
+  useEffect(() => {
+    if (!patternSlug) return;
+    getArchitecturePattern(patternSlug).then(setPatternDetail).catch(() => {});
+  }, [patternSlug]);
+
   if (loading) return <p style={{ padding: 32, color: '#94a3b8' }}>読み込み中...</p>;
   if (error) return <p style={S.err}>エラー: {error}</p>;
 
@@ -41,6 +53,13 @@ export default function RiskRanking() {
         <h1 style={S.title}>リスクランキング</h1>
         {language && <span style={S.badge}>{language}</span>}
       </div>
+
+      <JourneyNav pattern={patternSlug} language={language || null} />
+
+      {patternDetail && (
+        <div style={S.banner}>「{patternDetail.name}」構成に基づくリスクランキングです。</div>
+      )}
+
       <div style={{ marginBottom: 16 }}><RiskLegend /></div>
       <RiskTable rows={rows} onRowClick={(r) => navigate(`/repos/${r.id}`)} />
     </div>

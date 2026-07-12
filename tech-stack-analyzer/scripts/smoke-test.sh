@@ -33,6 +33,7 @@ if [ ${#EXPECTED_STRINGS[@]} -eq 0 ]; then
     "プランナー" "ダッシュボード" "リスクランキング"
     "関連Qiita記事" "リスク分布バブルチャート" "言語関係グラフ"
     "アーキテクチャガイド" "構成要素" "リスク・注意点"
+    "作りたいものカタログ" "情報共有・ナレッジ共有"
   )
 fi
 
@@ -62,6 +63,7 @@ check_status "/ は200" 200 "$BASE_URL/"
 check_status "/planner は200(SPAフォールバック)" 200 "$BASE_URL/planner"
 check_status "/language-graph は200(SPAフォールバック)" 200 "$BASE_URL/language-graph"
 check_status "/guide は200(SPAフォールバック)" 200 "$BASE_URL/guide"
+check_status "/reading は200(SPAフォールバック)" 200 "$BASE_URL/reading"
 
 echo "=== 4. 配信されているJSバンドルの中身を実際に検証(ステータスコードだけで判断しない) ==="
 INDEX_HTML=$(curl -s "$BASE_URL/")

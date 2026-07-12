@@ -1,6 +1,8 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { postAnalyze, getRepos, getQiitaTrends } from '../api/client.js';
+import { useSearchParams } from 'react-router-dom';
+import { postAnalyze, getRepos, getQiitaTrends, getArchitecturePattern } from '../api/client.js';
 import { riskColor, riskLevelLabel } from '../riskMeta.js';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 const GanttChart = lazy(() => import('../components/GanttChart.jsx'));
 
@@ -59,6 +61,9 @@ const S = {
 const initialForm = { projectOverview: '', goals: '', candidateStack: [] };
 
 export default function ProjectPlanner() {
+  const [searchParams] = useSearchParams();
+  const patternSlug = searchParams.get('pattern');
+  const [patternDetail, setPatternDetail] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [stackOptions, setStackOptions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +82,21 @@ export default function ProjectPlanner() {
       })
       .catch(() => setStackOptions([]));
   }, []);
+
+  // アーキテクチャガイドから遷移してきた場合、選択したパターンの構成に含まれる言語を
+  // 候補の技術スタックへ自動で反映する(ジャーニーの文脈を引き継ぐ)。
+  useEffect(() => {
+    if (!patternSlug) return;
+    getArchitecturePattern(patternSlug).then(setPatternDetail).catch(() => {});
+  }, [patternSlug]);
+
+  useEffect(() => {
+    if (!patternDetail?.matchedLanguages?.length) return;
+    setForm((f) => ({
+      ...f,
+      candidateStack: [...new Set([...f.candidateStack, ...patternDetail.matchedLanguages])],
+    }));
+  }, [patternDetail]);
 
   const onChange = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
@@ -114,6 +134,15 @@ export default function ProjectPlanner() {
       <p style={S.subtitle}>
         作りたいアプリの概要とゴールを入力すると、収集済みの実データを根拠に技術スタックのリスク・工数レンジ・WBSを提案します。
       </p>
+
+      <JourneyNav pattern={patternSlug} nextLabel="スキップして言語関係グラフへ →" />
+
+      {patternDetail && (
+        <div style={S.banner}>
+          アーキテクチャガイドで選択した「{patternDetail.name}」を元に分析します
+          (候補の技術スタックに自動反映済み)。
+        </div>
+      )}
 
       <form onSubmit={onSubmit}>
         <div style={S.field}>

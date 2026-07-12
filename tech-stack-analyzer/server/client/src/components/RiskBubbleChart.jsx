@@ -14,7 +14,8 @@ const S = {
 
 const axisTick = { fill: '#64748b', fontSize: 11 };
 
-export default function RiskBubbleChart({ rows }) {
+export default function RiskBubbleChart({ rows, highlightLanguages = [] }) {
+  const highlightSet = new Set(highlightLanguages.map((l) => l.toLowerCase()));
   const data = (rows || [])
     .filter((r) => r.churn_score != null && r.bug_ratio_score != null)
     .map((r) => ({
@@ -78,9 +79,17 @@ export default function RiskBubbleChart({ rows }) {
               }}
             />
             <Scatter data={data} fillOpacity={0.75}>
-              {data.map((d, i) => (
-                <Cell key={i} fill={riskColor(d.total)} />
-              ))}
+              {data.map((d, i) => {
+                const isHighlighted = highlightSet.has((d.language || '').toLowerCase());
+                return (
+                  <Cell
+                    key={i}
+                    fill={riskColor(d.total)}
+                    stroke={isHighlighted ? '#60a5fa' : 'none'}
+                    strokeWidth={isHighlighted ? 2 : 0}
+                  />
+                );
+              })}
             </Scatter>
           </ScatterChart>
         </ResponsiveContainer>

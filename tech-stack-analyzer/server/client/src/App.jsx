@@ -6,6 +6,7 @@ import RepoDetail from './pages/RepoDetail.jsx';
 import ProjectPlanner from './pages/ProjectPlanner.jsx';
 import LanguageGraph from './pages/LanguageGraph.jsx';
 import Guide from './pages/Guide.jsx';
+import Reading from './pages/Reading.jsx';
 
 const NAV_H = 56;
 
@@ -29,6 +30,7 @@ function Nav() {
   return (
     <nav style={navStyle}>
       <span style={{ color: '#e2e8f0', fontWeight: 700, marginRight: 8 }}>🔍 Tech Stack Analyzer</span>
+      <NavLink to="/reading">はじめに</NavLink>
       <NavLink to="/">ダッシュボード</NavLink>
       <NavLink to="/risk-ranking">リスクランキング</NavLink>
       <NavLink to="/language-graph">言語関係グラフ</NavLink>
@@ -44,6 +46,7 @@ export default function App() {
       <Nav />
       <div style={{ paddingTop: NAV_H }}>
         <Routes>
+          <Route path="/reading" element={<Reading />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/risk-ranking" element={<RiskRanking />} />
           <Route path="/repos/:id" element={<RepoDetail />} />

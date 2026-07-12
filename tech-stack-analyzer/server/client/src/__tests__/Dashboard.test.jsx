@@ -7,6 +7,7 @@ import Dashboard from '../pages/Dashboard.jsx';
 
 vi.mock('../api/client.js', () => ({
   getRiskRanking: vi.fn(),
+  getArchitecturePattern: vi.fn(),
 }));
 
 const MOCK_ROWS = [
@@ -78,4 +79,22 @@ test('要注意リポジトリが無い言語にはバッジを表示しない',
   );
   await waitFor(() => expect(screen.getByText('Ruby')).toBeInTheDocument());
   expect(screen.queryByText(/件が要注意/)).not.toBeInTheDocument();
+});
+
+test('?patternがあれば該当言語のカードをハイライトする', async () => {
+  vi.mocked(apiClient.getArchitecturePattern).mockResolvedValue({
+    slug: 'efficiency-enterprise', name: 'チーム開発・エンタープライズ向け構成', matchedLanguages: ['TypeScript'],
+  });
+  render(
+    <MemoryRouter initialEntries={['/?pattern=efficiency-enterprise&language=TypeScript']}>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/risk-ranking" element={<div>RiskRanking</div>} />
+      </Routes>
+    </MemoryRouter>
+  );
+  await waitFor(() => expect(screen.getByText('🎯 選択中の構成に含まれる言語')).toBeInTheDocument());
+  expect(
+    screen.getByText(/チーム開発・エンタープライズ向け構成」構成に含まれる言語\(TypeScript\)/)
+  ).toBeInTheDocument();
 });

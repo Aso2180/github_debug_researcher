@@ -153,7 +153,8 @@ const S = {
   tooltipRow: { color: '#94a3b8' },
 };
 
-export default function LanguageGraphChart({ nodes, edges, onNodeClick }) {
+export default function LanguageGraphChart({ nodes, edges, onNodeClick, highlightLanguages = [] }) {
+  const highlightSet = new Set(highlightLanguages.map((l) => l.toLowerCase()));
   const wrapRef = useRef(null);
   const [hoverLanguage, setHoverLanguage] = useState(null);
   const [tooltip, setTooltip] = useState(null);
@@ -274,6 +275,12 @@ export default function LanguageGraphChart({ nodes, edges, onNodeClick }) {
                 setTooltip(null);
               }}
             >
+              {/* アーキテクチャガイドで選択した構成に含まれる言語を、リスク色とは別の青いリングで
+                  ハイライトする(ジャーニーのストーリーをグラフ上でも追えるようにする)。
+                  要注意リング(赤)より外側に描画し、両方該当する場合も同心円で共存できるようにする。 */}
+              {highlightSet.has(n.language.toLowerCase()) && (
+                <circle r={r + 9} fill="none" stroke="#60a5fa" strokeWidth={2.5} strokeDasharray="2 3" />
+              )}
               {/* 平均だけを見るとほぼ全言語が緑に見える(16章で判明した「最大公約数」問題)ため、
                   平均とは無関係に「この言語には要注意リポジトリが混ざっている」ことを示すリングを追加する。 */}
               {n.maxRisk >= RISK_THRESHOLDS.high && (

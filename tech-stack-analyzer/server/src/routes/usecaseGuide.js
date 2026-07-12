@@ -48,6 +48,26 @@ function splitTopBottom(rows) {
   return { top, bottom };
 }
 
+async function fetchKnownLanguages() {
+  const rows = await query('SELECT DISTINCT primary_language FROM repositories WHERE primary_language IS NOT NULL');
+  return rows.map((r) => r.primary_language);
+}
+
+// パターン全体として「実際に収集済みの言語と一致するもの」を1回だけ算出する。下流(プランナー/
+// 言語関係グラフ/リスクランキング/ダッシュボード)がこの値をそのままハイライト対象言語として使い、
+// 突き合わせロジックを再実装しなくて済むようにする。
+function matchLanguages(components, knownLanguages) {
+  const knownByLower = new Map(knownLanguages.map((l) => [l.toLowerCase(), l]));
+  const matched = new Set();
+  for (const component of components) {
+    for (const token of extractTokens(component.component_name)) {
+      const actual = knownByLower.get(token.toLowerCase());
+      if (actual) matched.add(actual);
+    }
+  }
+  return [...matched];
+}
+
 async function attachRealData(component) {
   const tokens = extractTokens(component.component_name);
   const [matchedRepos, articlesByTag] = await Promise.all([
@@ -129,7 +149,10 @@ router.get('/architecture-patterns/:slug', async (req, res, next) => {
        WHERE pattern_id = $1 ORDER BY id`,
       [pattern.id]
     );
-    const componentsWithData = await Promise.all(components.map(attachRealData));
+    const [componentsWithData, knownLanguages] = await Promise.all([
+      Promise.all(components.map(attachRealData)),
+      fetchKnownLanguages(),
+    ]);
 
     res.json({
       id: pattern.id,
@@ -140,6 +163,7 @@ router.get('/architecture-patterns/:slug', async (req, res, next) => {
       risk_notes: pattern.risk_notes,
       category: categories[0] || null,
       components: componentsWithData,
+      matchedLanguages: matchLanguages(components, knownLanguages),
     });
   } catch (err) {
     next(err);

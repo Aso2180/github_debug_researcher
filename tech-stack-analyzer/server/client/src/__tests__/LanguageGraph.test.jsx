@@ -7,6 +7,7 @@ import LanguageGraph from '../pages/LanguageGraph.jsx';
 
 vi.mock('../api/client.js', () => ({
   getLanguageGraph: vi.fn(),
+  getArchitecturePattern: vi.fn(),
 }));
 
 const MOCK_DATA = {
@@ -34,9 +35,42 @@ function renderWithRouter() {
 
 test('見出しとノードが表示される', async () => {
   renderWithRouter();
-  await waitFor(() => expect(screen.getByText('言語関係グラフ')).toBeInTheDocument());
+  // JourneyNavのステップラベルにも同名の文字列が出るため、見出し要素(h1)として特定する
+  await waitFor(() => expect(screen.getByRole('heading', { name: '言語関係グラフ' })).toBeInTheDocument());
   expect(screen.getByText('Python')).toBeInTheDocument();
   expect(screen.getByText('TypeScript')).toBeInTheDocument();
+});
+
+test('?patternがあればマッチした言語をハイライトするバナーを表示する', async () => {
+  vi.mocked(apiClient.getArchitecturePattern).mockResolvedValue({
+    slug: 'efficiency-enterprise', name: 'チーム開発・エンタープライズ向け構成', matchedLanguages: ['TypeScript'],
+  });
+  render(
+    <MemoryRouter initialEntries={['/language-graph?pattern=efficiency-enterprise']}>
+      <Routes>
+        <Route path="/language-graph" element={<LanguageGraph />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  await waitFor(() =>
+    expect(screen.getByText(/チーム開発・エンタープライズ向け構成」構成に含まれる言語\(TypeScript\)/)).toBeInTheDocument()
+  );
+});
+
+test('?patternで一致する言語が無い場合は注記を表示する', async () => {
+  vi.mocked(apiClient.getArchitecturePattern).mockResolvedValue({
+    slug: 'automation-light', name: 'iPaaS中心の構成', matchedLanguages: [],
+  });
+  render(
+    <MemoryRouter initialEntries={['/language-graph?pattern=automation-light']}>
+      <Routes>
+        <Route path="/language-graph" element={<LanguageGraph />} />
+      </Routes>
+    </MemoryRouter>
+  );
+  await waitFor(() =>
+    expect(screen.getByText(/iPaaS中心の構成」構成に一致する収集対象言語は現在ありません/)).toBeInTheDocument()
+  );
 });
 
 test('ノードクリックでリスクランキング画面(言語フィルタ付き)へ遷移する', async () => {

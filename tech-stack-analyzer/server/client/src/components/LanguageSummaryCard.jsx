@@ -6,7 +6,7 @@ const LANG_COLORS = {
   Ruby: '#cc342d', Go: '#00add8', Rust: '#ce422b', Java: '#ed8b00',
 };
 
-export default function LanguageSummaryCard({ data, onClick }) {
+export default function LanguageSummaryCard({ data, onClick, highlighted = false }) {
   const { language, repoCount, avgRisk, minRisk, maxRisk, highRiskCount } = data;
   const color = LANG_COLORS[language] || '#64748b';
   const risk = Number(avgRisk);
@@ -16,12 +16,20 @@ export default function LanguageSummaryCard({ data, onClick }) {
     <div
       onClick={onClick}
       style={{
-        background: '#1e293b', border: `1px solid #334155`, borderRadius: 10,
+        background: '#1e293b', border: `1px solid ${highlighted ? '#60a5fa' : '#334155'}`, borderRadius: 10,
         padding: 20, cursor: 'pointer', transition: 'border-color 0.15s',
+        boxShadow: highlighted ? '0 0 0 1px #60a5fa' : 'none',
       }}
       onMouseEnter={(e) => e.currentTarget.style.borderColor = '#3b82f6'}
-      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#334155'}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = highlighted ? '#60a5fa' : '#334155'}
     >
+      {/* アーキテクチャガイドで選択した構成に含まれる言語をアクセント枠+タグでハイライトする
+          (ジャーニーのストーリーをダッシュボードでも追えるようにする)。 */}
+      {highlighted && (
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#60a5fa', marginBottom: 8 }}>
+          🎯 選択中の構成に含まれる言語
+        </div>
+      )}
       {/* 言語を示す色(ブランドカラー)はリスクの色とは無関係なので、太いボーダーではなく
           小さいドットに留めて「危険度の帯」に見えないようにする(前版1.2節参照)。 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>

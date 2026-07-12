@@ -65,6 +65,8 @@ function renderWithRouter() {
         <Route path="/" element={<div>ダッシュボード画面</div>} />
         <Route path="/risk-ranking" element={<div>RiskRanking画面</div>} />
         <Route path="/language-graph" element={<div>言語関係グラフ画面</div>} />
+        <Route path="/planner" element={<div>プランナー画面</div>} />
+        <Route path="/reading" element={<div>はじめに画面</div>} />
       </Routes>
     </MemoryRouter>
   );
@@ -128,4 +130,34 @@ test('他画面への回遊リンクが機能する', async () => {
 
   fireEvent.click(screen.getByText('言語関係グラフへ'));
   await waitFor(() => expect(screen.getByText('言語関係グラフ画面')).toBeInTheDocument());
+});
+
+test('JourneyNavの「次へ」はパターン選択まで無効化され、選択後にプランナーへ遷移できる', async () => {
+  renderWithRouter();
+  await waitFor(() => expect(screen.getByText('効率化・生産性向上')).toBeInTheDocument());
+
+  const nextButtons = () => screen.getAllByRole('button').filter((b) => b.textContent.includes('次へ'));
+  expect(nextButtons()[0]).toBeDisabled();
+  expect(screen.getByText('パターンを選択してください')).toBeInTheDocument();
+
+  fireEvent.click(screen.getByText('効率化・生産性向上'));
+  await waitFor(() => expect(screen.getByText('チーム開発・エンタープライズ向け構成')).toBeInTheDocument());
+  fireEvent.click(screen.getByText('チーム開発・エンタープライズ向け構成'));
+  await waitFor(() => expect(screen.getByText('Kubernetesは学習コストが高い')).toBeInTheDocument());
+
+  await waitFor(() => expect(nextButtons()[0]).not.toBeDisabled());
+  fireEvent.click(nextButtons()[0]);
+  await waitFor(() => expect(screen.getByText('プランナー画面')).toBeInTheDocument());
+});
+
+test('Step3の「→ プランナーで分析する」リンクでプランナーへ遷移する', async () => {
+  renderWithRouter();
+  await waitFor(() => expect(screen.getByText('効率化・生産性向上')).toBeInTheDocument());
+  fireEvent.click(screen.getByText('効率化・生産性向上'));
+  await waitFor(() => expect(screen.getByText('チーム開発・エンタープライズ向け構成')).toBeInTheDocument());
+  fireEvent.click(screen.getByText('チーム開発・エンタープライズ向け構成'));
+  await waitFor(() => expect(screen.getByText('→ プランナーで分析する')).toBeInTheDocument());
+
+  fireEvent.click(screen.getByText('→ プランナーで分析する'));
+  await waitFor(() => expect(screen.getByText('プランナー画面')).toBeInTheDocument());
 });

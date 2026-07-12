@@ -7,6 +7,7 @@ import RiskRanking from '../pages/RiskRanking.jsx';
 
 vi.mock('../api/client.js', () => ({
   getRiskRanking: vi.fn(),
+  getArchitecturePattern: vi.fn(),
 }));
 
 const MOCK_ROWS = [
@@ -45,4 +46,14 @@ test('API エラー時にエラーメッセージを表示する', async () => {
   vi.mocked(apiClient.getRiskRanking).mockRejectedValueOnce(new Error('API error: 401'));
   renderWithRouter();
   await waitFor(() => expect(screen.getByText(/エラー/)).toBeInTheDocument());
+});
+
+test('?patternがあればパターン名を含むバナーを表示する', async () => {
+  vi.mocked(apiClient.getArchitecturePattern).mockResolvedValue({
+    slug: 'efficiency-enterprise', name: 'チーム開発・エンタープライズ向け構成', matchedLanguages: ['TypeScript'],
+  });
+  renderWithRouter('?pattern=efficiency-enterprise&language=TypeScript');
+  await waitFor(() =>
+    expect(screen.getByText('「チーム開発・エンタープライズ向け構成」構成に基づくリスクランキングです。')).toBeInTheDocument()
+  );
 });

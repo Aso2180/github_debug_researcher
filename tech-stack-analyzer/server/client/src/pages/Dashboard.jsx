@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getRiskRanking } from '../api/client.js';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getRiskRanking, getArchitecturePattern } from '../api/client.js';
 import LanguageSummaryCard from '../components/LanguageSummaryCard.jsx';
 import RiskBubbleChart from '../components/RiskBubbleChart.jsx';
 import { RISK_THRESHOLDS } from '../riskMeta.js';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 const S = {
   page: { padding: 32 },
@@ -11,14 +12,27 @@ const S = {
   sub: { color: '#64748b', marginBottom: 24, fontSize: 14 },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16, marginBottom: 32 },
   err: { color: '#f87171', padding: 16 },
+  banner: {
+    background: '#1e293b', border: '1px solid #334155', borderRadius: 8,
+    padding: '12px 16px', fontSize: 13, color: '#93c5fd', marginBottom: 16, lineHeight: 1.6,
+  },
 };
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
+  const patternSlug = searchParams.get('pattern');
+  const language = searchParams.get('language') || '';
+  const [patternDetail, setPatternDetail] = useState(null);
   const [rows, setRows] = useState([]);
   const [summary, setSummary] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!patternSlug) return;
+    getArchitecturePattern(patternSlug).then(setPatternDetail).catch(() => {});
+  }, [patternSlug]);
 
   useEffect(() => {
     getRiskRanking({ limit: 200 })
@@ -54,20 +68,34 @@ export default function Dashboard() {
   if (loading) return <p style={{ padding: 32, color: '#94a3b8' }}>読み込み中...</p>;
   if (error) return <p style={S.err}>エラー: {error}</p>;
 
+  const matchedLanguages = patternDetail?.matchedLanguages || [];
+
   return (
     <div style={S.page}>
       <h1 style={S.title}>言語別リスクサマリ</h1>
       <p style={S.sub}>カードをクリックすると言語別のリスクランキングを表示します</p>
+
+      <JourneyNav pattern={patternSlug} language={language || null} />
+
+      {patternDetail && (
+        <div style={S.banner}>
+          {matchedLanguages.length > 0
+            ? `「${patternDetail.name}」構成に含まれる言語(${matchedLanguages.join('、')})をハイライトしています。`
+            : `「${patternDetail.name}」構成に一致する収集対象言語は現在ありません。全体を表示しています。`}
+        </div>
+      )}
+
       <div style={S.grid}>
         {summary.map((s) => (
           <LanguageSummaryCard
             key={s.language}
             data={s}
+            highlighted={matchedLanguages.includes(s.language)}
             onClick={() => navigate(`/risk-ranking?language=${encodeURIComponent(s.language)}`)}
           />
         ))}
       </div>
-      <RiskBubbleChart rows={rows} />
+      <RiskBubbleChart rows={rows} highlightLanguages={matchedLanguages} />
     </div>
   );
 }

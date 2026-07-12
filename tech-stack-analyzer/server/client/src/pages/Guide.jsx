@@ -6,6 +6,7 @@ import {
   getArchitecturePattern,
 } from '../api/client.js';
 import { riskColor } from '../riskMeta.js';
+import JourneyNav from '../components/JourneyNav.jsx';
 
 const LAYER_LABELS = {
   frontend: 'フロントエンド',
@@ -127,6 +128,12 @@ export default function Guide() {
         ユースケースを選ぶと、代表的なアーキテクチャパターンと、収集済みの実データに基づくリスク傾向を確認できます。
       </p>
 
+      <JourneyNav
+        pattern={patternDetail?.slug || null}
+        nextDisabled={!patternDetail}
+        nextDisabledHint={!patternDetail ? 'パターンを選択してください' : undefined}
+      />
+
       {error && <p style={S.err}>エラー: {error}</p>}
 
       {step === 1 && (
@@ -222,6 +229,12 @@ export default function Guide() {
           </div>
 
           <div style={S.linkRow}>
+            <span
+              style={{ ...S.link, fontWeight: 700 }}
+              onClick={() => navigate(`/planner?pattern=${patternDetail.slug}`)}
+            >
+              → プランナーで分析する
+            </span>
             <span style={S.link} onClick={() => navigate('/')}>ダッシュボードへ</span>
             <span style={S.link} onClick={() => navigate('/risk-ranking')}>リスクランキングへ</span>
             <span style={S.link} onClick={() => navigate('/language-graph')}>言語関係グラフへ</span>
