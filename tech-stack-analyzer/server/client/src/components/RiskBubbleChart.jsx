@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, Cell, ResponsiveContainer,
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { riskColor, SCORE_META } from '../riskMeta.js';
 import RiskLegend from './RiskLegend.jsx';
 
@@ -15,6 +16,7 @@ const S = {
 const axisTick = { fill: '#64748b', fontSize: 11 };
 
 export default function RiskBubbleChart({ rows, highlightLanguages = [] }) {
+  const navigate = useNavigate();
   const highlightSet = new Set(highlightLanguages.map((l) => l.toLowerCase()));
   const data = (rows || [])
     .filter((r) => r.churn_score != null && r.bug_ratio_score != null)
@@ -78,7 +80,13 @@ export default function RiskBubbleChart({ rows, highlightLanguages = [] }) {
                 );
               }}
             />
-            <Scatter data={data} fillOpacity={0.75}>
+            <Scatter
+              data={data}
+              fillOpacity={0.75}
+              onClick={(point) => {
+                if (point?.language) navigate(`/risk-ranking?language=${encodeURIComponent(point.language)}`);
+              }}
+            >
               {data.map((d, i) => {
                 const isHighlighted = highlightSet.has((d.language || '').toLowerCase());
                 return (
@@ -87,6 +95,7 @@ export default function RiskBubbleChart({ rows, highlightLanguages = [] }) {
                     fill={riskColor(d.total)}
                     stroke={isHighlighted ? '#60a5fa' : 'none'}
                     strokeWidth={isHighlighted ? 2 : 0}
+                    style={{ cursor: 'pointer' }}
                   />
                 );
               })}
@@ -97,7 +106,7 @@ export default function RiskBubbleChart({ rows, highlightLanguages = [] }) {
       <p style={S.note}>
         バブルの色は総合リスク({SCORE_META.total_score.description})、大きさはStars数を表します。
         コードチャーン・Bug比率はいずれも0〜1に正規化された値です({SCORE_META.churn_score.description} /
-        {' '}{SCORE_META.bug_ratio_score.description})
+        {' '}{SCORE_META.bug_ratio_score.description})。バブルをクリックするとその言語のリスクランキングへ移動します。
       </p>
     </div>
   );

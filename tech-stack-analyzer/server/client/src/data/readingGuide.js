@@ -1,11 +1,10 @@
 // READING-tech-category-patterns.md(ユーザー提供の読み物)の書き起こし。
 // markdownレンダリングライブラリは追加せず、既存のLanguageGraphChart/GanttChartと同じ方針
 // (軽量な内容は自前の構造化データ+JSXで表示する)を踏襲する。
-// guideSlugが設定されているカテゴリのみ、実際に/guideで選択できる(Phase3 MVPスコープ)。
+// 6カテゴリ全てアーキテクチャガイドで実際に選択できる。
 export const READING_SECTIONS = [
   {
     slug: 'info-sharing',
-    guideSlug: null,
     title: '情報共有・ナレッジ共有 — 「あの資料どこだっけ」を無くす',
     intro:
       '社内マニュアル・議事録・仕様書が増えすぎて、誰も全体を把握できなくなる。この課題への2026年の定番解は、' +
@@ -33,7 +32,6 @@ export const READING_SECTIONS = [
   },
   {
     slug: 'efficiency',
-    guideSlug: 'efficiency',
     title: '効率化・生産性向上 — 社内SaaS・業務ダッシュボード',
     intro:
       '「毎日の業務をもっと速く、もっと楽に」という王道の課題です。2026年に個人開発〜小規模チームでよく選ばれているのは、' +
@@ -53,7 +51,6 @@ export const READING_SECTIONS = [
   },
   {
     slug: 'automation',
-    guideSlug: 'automation',
     title: '業務自動化 — RPA・iPaaS',
     intro:
       '定型的な繰り返し作業をソフトウェアに任せる分野です。2026年時点では「パソコン画面の操作を自動化したいならRPA' +
@@ -72,7 +69,6 @@ export const READING_SECTIONS = [
   },
   {
     slug: 'data-analysis',
-    guideSlug: null,
     title: 'データ分析・市場予測 — データ基盤・BI',
     intro:
       '売上データや利用ログから将来を予測したり、意思決定の材料を揃えたりする分野です。2026年現在、DWH(Snowflakeまたは' +
@@ -90,7 +86,6 @@ export const READING_SECTIONS = [
   },
   {
     slug: 'labor-reduction',
-    guideSlug: null,
     title: '省人化 — AI-OCR・IDP(非定型文書処理)',
     intro:
       '紙の帳票をデータ化して人手を減らす分野です。ある事例では、手入力からAI-OCRへ切り替えたことで38人体制が4人まで' +
@@ -109,7 +104,6 @@ export const READING_SECTIONS = [
   },
   {
     slug: 'risk-detection',
-    guideSlug: null,
     title: 'リスク検知・不正検知 — 異常検知・取引モニタリング',
     intro:
       '不正な取引や異常な挙動をいち早く見つけ出す分野です。教師あり学習(既知の不正パターンの検知)と教師なし学習' +

@@ -6,17 +6,9 @@ const S = {
   page: { padding: 32, maxWidth: 860, margin: '0 auto' },
   title: { fontSize: 22, fontWeight: 700, color: '#f1f5f9', marginBottom: 4 },
   subtitle: { color: '#64748b', fontSize: 13, marginBottom: 24, lineHeight: 1.6 },
-  note: {
-    background: '#1e293b', border: '1px solid #334155', borderRadius: 8, padding: '12px 16px',
-    fontSize: 13, color: '#93c5fd', marginBottom: 28, lineHeight: 1.6,
-  },
   section: { marginBottom: 28 },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' },
   sectionTitle: { fontSize: 17, fontWeight: 700, color: '#f1f5f9' },
-  guideBadge: {
-    fontSize: 11, fontWeight: 600, color: '#f1f5f9', background: '#0891b2',
-    borderRadius: 4, padding: '2px 8px',
-  },
   intro: { fontSize: 14, color: '#cbd5e1', lineHeight: 1.7, marginBottom: 12 },
   table: { width: '100%', borderCollapse: 'collapse', marginBottom: 12, fontSize: 13 },
   th: { textAlign: 'left', color: '#94a3b8', borderBottom: '1px solid #334155', padding: '6px 10px' },
@@ -38,16 +30,10 @@ export default function Reading() {
         「こういうシステムを作りたい」という相談の多くは、実は典型的な6つのシーンに当てはまります。
         技術選定を始める前に、代表的な構成と現場でよく聞く「あるある」な落とし穴を確認しておきましょう。
       </p>
-      <div style={S.note}>
-        現時点で本アプリの「アーキテクチャガイド」から実際に選べるのは「効率化・生産性向上」「業務自動化」の
-        2カテゴリです(バッジ付き)。他4カテゴリは一般知識としての紹介で、対応するガイドは今後追加予定です。
-      </div>
-
       {READING_SECTIONS.map((section) => (
         <div key={section.slug} style={S.section}>
           <div style={S.sectionHeader}>
             <h2 style={S.sectionTitle}>{section.title}</h2>
-            {section.guideSlug && <span style={S.guideBadge}>ガイドで選択可</span>}
           </div>
           <p style={S.intro}>{section.intro}</p>
           {section.table && (
