@@ -3,9 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import LanguageGraphChart from '../components/LanguageGraphChart.jsx';
 
+// maxRiskはいずれもRISK_THRESHOLDS.high(0.7)未満にし、既存の「circle要素数」系アサーションが
+// 要注意リング(maxRisk>=0.7で追加されるcircle)の影響を受けないようにする。リング自体は専用テストで検証する。
 const NODES = [
-  { language: 'Python', repoCount: 10, avgRisk: 0.1 },
-  { language: 'TypeScript', repoCount: 5, avgRisk: 0.8 },
+  { language: 'Python', repoCount: 10, avgRisk: 0.1, minRisk: 0.05, maxRisk: 0.2 },
+  { language: 'TypeScript', repoCount: 5, avgRisk: 0.55, minRisk: 0.4, maxRisk: 0.65 },
 ];
 const EDGES = [{ source: 'Python', target: 'TypeScript', weight: 3 }];
 
@@ -33,13 +35,27 @@ test('エッジ本数分だけpath要素(曲線)が描画される', () => {
   expect(container.querySelectorAll('circle').length).toBe(2);
 });
 
-test('ノードにホバーするとツールチップが表示され、離れると消える', () => {
+test('ノードにホバーするとツールチップ(平均・最小〜最大)が表示され、離れると消える', () => {
   render(<LanguageGraphChart nodes={NODES} edges={EDGES} onNodeClick={() => {}} />);
   const pythonLabel = screen.getByText('Python');
   fireEvent.mouseEnter(pythonLabel.closest('g'), { clientX: 100, clientY: 100 });
   expect(screen.getByText('リポジトリ数: 10')).toBeInTheDocument();
+  expect(screen.getByText('最小〜最大: 0.050〜0.200')).toBeInTheDocument();
   fireEvent.mouseLeave(pythonLabel.closest('g'));
   expect(screen.queryByText('リポジトリ数: 10')).not.toBeInTheDocument();
+});
+
+test('maxRiskが高いノードには要注意リングが描画される(平均が低くても分かるようにする)', () => {
+  const nodes = [
+    { language: 'Python', repoCount: 10, avgRisk: 0.2, minRisk: 0.1, maxRisk: 0.75 },
+    { language: 'Ruby', repoCount: 5, avgRisk: 0.2, minRisk: 0.15, maxRisk: 0.25 },
+  ];
+  const { container } = render(<LanguageGraphChart nodes={nodes} edges={[]} onNodeClick={() => {}} />);
+  // Python(maxRisk=0.75 >= RISK_THRESHOLDS.high)のgにはリング用の破線circleが余分に含まれる
+  const pythonGroup = screen.getByText('Python').closest('g');
+  const rubyGroup = screen.getByText('Ruby').closest('g');
+  expect(pythonGroup.querySelectorAll('circle').length).toBe(2);
+  expect(rubyGroup.querySelectorAll('circle').length).toBe(1);
 });
 
 function parseTranslate(g) {
@@ -49,10 +65,10 @@ function parseTranslate(g) {
 
 test('force-directedレイアウトにより、正円周上の等間隔配置(単純な正多角形)にはならない', () => {
   const manyNodes = [
-    { language: 'Python', repoCount: 10, avgRisk: 0.1 },
-    { language: 'TypeScript', repoCount: 10, avgRisk: 0.2 },
-    { language: 'Ruby', repoCount: 10, avgRisk: 0.3 },
-    { language: 'Go', repoCount: 10, avgRisk: 0.4 },
+    { language: 'Python', repoCount: 10, avgRisk: 0.1, minRisk: 0.05, maxRisk: 0.15 },
+    { language: 'TypeScript', repoCount: 10, avgRisk: 0.2, minRisk: 0.1, maxRisk: 0.3 },
+    { language: 'Ruby', repoCount: 10, avgRisk: 0.3, minRisk: 0.2, maxRisk: 0.4 },
+    { language: 'Go', repoCount: 10, avgRisk: 0.4, minRisk: 0.3, maxRisk: 0.5 },
   ];
   const manyEdges = [
     { source: 'Python', target: 'TypeScript', weight: 5 },
@@ -82,9 +98,9 @@ function nodeGroupsOf(container, languages) {
 
 test('同じノード・エッジの入力なら、再レンダリングしてもレイアウトは決定的(揺れない)', () => {
   const manyNodes = [
-    { language: 'Python', repoCount: 10, avgRisk: 0.1 },
-    { language: 'TypeScript', repoCount: 10, avgRisk: 0.2 },
-    { language: 'Ruby', repoCount: 10, avgRisk: 0.3 },
+    { language: 'Python', repoCount: 10, avgRisk: 0.1, minRisk: 0.05, maxRisk: 0.15 },
+    { language: 'TypeScript', repoCount: 10, avgRisk: 0.2, minRisk: 0.1, maxRisk: 0.3 },
+    { language: 'Ruby', repoCount: 10, avgRisk: 0.3, minRisk: 0.2, maxRisk: 0.4 },
   ];
   const manyEdges = [{ source: 'Python', target: 'TypeScript', weight: 5 }];
   const languages = manyNodes.map((n) => n.language);

@@ -24,11 +24,15 @@ DASHBOARD_PASSWORD="${3:?dashboard_password が必要です}"
 shift 3
 EXPECTED_STRINGS=("$@")
 if [ ${#EXPECTED_STRINGS[@]} -eq 0 ]; then
-  # Phase 2(Qiita記事リンク・バブルチャート・言語関係グラフ)で追加した画面のUI文字列も含める。
-  # 13章の「本番だけ新画面が表示されない」事故の再発防止(0.横断的な実装ルール参照)。
+  # Phase 2(Qiita記事リンク・バブルチャート・言語関係グラフ)・Phase 3(アーキテクチャガイド)で
+  # 追加した画面のUI文字列も含める。13章の「本番だけ新画面が表示されない」事故の再発防止
+  # (0.横断的な実装ルール参照)。
+  # 注意: ここに入れるのはJSXにハードコードされた静的文字列のみ。カテゴリ名等のDB由来の
+  # 動的コンテンツ(例:「効率化・生産性向上」)はバンドルに含まれないため対象外(実際にNGになって判明した)。
   EXPECTED_STRINGS=(
     "プランナー" "ダッシュボード" "リスクランキング"
     "関連Qiita記事" "リスク分布バブルチャート" "言語関係グラフ"
+    "アーキテクチャガイド" "構成要素" "リスク・注意点"
   )
 fi
 
@@ -57,6 +61,7 @@ echo "=== 3. フロントの配信ルート ==="
 check_status "/ は200" 200 "$BASE_URL/"
 check_status "/planner は200(SPAフォールバック)" 200 "$BASE_URL/planner"
 check_status "/language-graph は200(SPAフォールバック)" 200 "$BASE_URL/language-graph"
+check_status "/guide は200(SPAフォールバック)" 200 "$BASE_URL/guide"
 
 echo "=== 4. 配信されているJSバンドルの中身を実際に検証(ステータスコードだけで判断しない) ==="
 INDEX_HTML=$(curl -s "$BASE_URL/")

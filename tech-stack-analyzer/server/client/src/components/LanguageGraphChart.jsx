@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { riskColor } from '../riskMeta.js';
+import { riskColor, RISK_THRESHOLDS } from '../riskMeta.js';
 
 // グラフ描画ライブラリを新規導入せず、素のSVGで手組みする(9章のfrappe-gantt前例のように
 // バンドルサイズへ影響する重量級ライブラリは今回のノード数・エッジ数の規模には見合わないため)。
@@ -252,13 +252,21 @@ export default function LanguageGraphChart({ nodes, edges, onNodeClick }) {
                 setHoverLanguage(n.language);
                 moveTooltip(e, {
                   title: n.language,
-                  lines: [`リポジトリ数: ${n.repoCount}`, `平均リスク: ${n.avgRisk.toFixed(3)}`],
+                  lines: [
+                    `リポジトリ数: ${n.repoCount}`,
+                    `平均リスク: ${n.avgRisk.toFixed(3)}`,
+                    `最小〜最大: ${n.minRisk.toFixed(3)}〜${n.maxRisk.toFixed(3)}`,
+                  ],
                 });
               }}
               onMouseMove={(e) =>
                 moveTooltip(e, {
                   title: n.language,
-                  lines: [`リポジトリ数: ${n.repoCount}`, `平均リスク: ${n.avgRisk.toFixed(3)}`],
+                  lines: [
+                    `リポジトリ数: ${n.repoCount}`,
+                    `平均リスク: ${n.avgRisk.toFixed(3)}`,
+                    `最小〜最大: ${n.minRisk.toFixed(3)}〜${n.maxRisk.toFixed(3)}`,
+                  ],
                 })
               }
               onMouseLeave={() => {
@@ -266,6 +274,11 @@ export default function LanguageGraphChart({ nodes, edges, onNodeClick }) {
                 setTooltip(null);
               }}
             >
+              {/* 平均だけを見るとほぼ全言語が緑に見える(16章で判明した「最大公約数」問題)ため、
+                  平均とは無関係に「この言語には要注意リポジトリが混ざっている」ことを示すリングを追加する。 */}
+              {n.maxRisk >= RISK_THRESHOLDS.high && (
+                <circle r={r + 5} fill="none" stroke={riskColor(n.maxRisk)} strokeWidth={2.5} strokeDasharray="4 3" />
+              )}
               <circle r={r} fill={riskColor(n.avgRisk)} fillOpacity={0.9} stroke="#0f172a" strokeWidth={2.5} filter="url(#node-shadow)" />
               <rect
                 x={-labelWidth / 2}

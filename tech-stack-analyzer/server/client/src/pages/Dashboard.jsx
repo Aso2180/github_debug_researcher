@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getRiskRanking } from '../api/client.js';
 import LanguageSummaryCard from '../components/LanguageSummaryCard.jsx';
 import RiskBubbleChart from '../components/RiskBubbleChart.jsx';
+import { RISK_THRESHOLDS } from '../riskMeta.js';
 
 const S = {
   page: { padding: 32 },
@@ -30,11 +31,19 @@ export default function Dashboard() {
           map[lang].repos.push(r);
           map[lang].totalScore += Number(r.total_score);
         });
-        const cards = Object.values(map).map((m) => ({
-          language: m.language,
-          repoCount: m.repos.length,
-          avgRisk: m.totalScore / m.repos.length,
-        }));
+        // 平均値だけだと個々のリポジトリのばらつきが見えなくなる(16章で判明した「最大公約数」問題)ため、
+        // min/maxと要注意件数も併せて算出し、平均が低くても要注意リポジトリがあればカードで気づけるようにする。
+        const cards = Object.values(map).map((m) => {
+          const scores = m.repos.map((r) => Number(r.total_score));
+          return {
+            language: m.language,
+            repoCount: m.repos.length,
+            avgRisk: m.totalScore / m.repos.length,
+            minRisk: Math.min(...scores),
+            maxRisk: Math.max(...scores),
+            highRiskCount: scores.filter((s) => s >= RISK_THRESHOLDS.high).length,
+          };
+        });
         cards.sort((a, b) => b.avgRisk - a.avgRisk);
         setSummary(cards);
       })

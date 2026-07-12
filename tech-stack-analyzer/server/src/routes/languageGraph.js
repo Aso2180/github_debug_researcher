@@ -23,8 +23,11 @@ router.get('/language-graph', async (req, res, next) => {
   try {
     // ノード: primary_languageごとの集計。平均リスクスコアは9章/14.1の教訓通り
     // MAX(calculated_at)相関サブクエリで最新行のみを対象にする。
+    // 16章以降、平均値だけでは個々のリポジトリのばらつきを覆い隠してしまう(「最大公約数」化し、
+    // 平均だけ見るとほぼ全言語が緑に見える)ことが判明したため、MIN/MAXも同じクエリで併せて返す。
     const nodeRows = await query(`
-      SELECT r.primary_language AS language, COUNT(*) AS repo_count, AVG(rs.total_score) AS avg_risk
+      SELECT r.primary_language AS language, COUNT(*) AS repo_count,
+             AVG(rs.total_score) AS avg_risk, MIN(rs.total_score) AS min_risk, MAX(rs.total_score) AS max_risk
       FROM repositories r
       JOIN risk_scores rs ON rs.repo_id = r.id
         AND rs.calculated_at = (SELECT MAX(calculated_at) FROM risk_scores WHERE repo_id = r.id)
@@ -35,6 +38,8 @@ router.get('/language-graph', async (req, res, next) => {
       language: n.language,
       repoCount: Number(n.repo_count),
       avgRisk: Number(n.avg_risk),
+      minRisk: Number(n.min_risk),
+      maxRisk: Number(n.max_risk),
     }));
     const languageByLower = new Map(nodes.map((n) => [n.language.toLowerCase(), n.language]));
 

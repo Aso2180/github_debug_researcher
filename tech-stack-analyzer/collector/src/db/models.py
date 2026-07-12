@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 
 from sqlalchemy import (
     Column, Integer, BigInteger, String, Boolean, Numeric,
-    DateTime, Date, ForeignKey, UniqueConstraint
+    DateTime, Date, ForeignKey, UniqueConstraint, Text
 )
 from sqlalchemy.orm import relationship, declarative_base
 
@@ -106,6 +106,48 @@ class QiitaArticle(Base):
     fetched_at = Column(DateTime, default=utcnow)
 
     __table_args__ = (UniqueConstraint("qiita_id", "tag", name="uq_qiita_id_tag"),)
+
+
+class UseCaseCategory(Base):
+    __tablename__ = "use_case_categories"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String(50), nullable=False, unique=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text)
+    display_order = Column(Integer, nullable=False, default=0)
+
+    patterns = relationship("ArchitecturePattern", back_populates="category", cascade="all, delete-orphan")
+
+
+class ArchitecturePattern(Base):
+    __tablename__ = "architecture_patterns"
+
+    id = Column(Integer, primary_key=True)
+    category_id = Column(Integer, ForeignKey("use_case_categories.id"), nullable=False)
+    slug = Column(String(50), nullable=False, unique=True)
+    name = Column(String(100), nullable=False)
+    tier = Column(String(20), nullable=False)
+    summary = Column(Text)
+    risk_notes = Column(Text)
+    display_order = Column(Integer, nullable=False, default=0)
+
+    category = relationship("UseCaseCategory", back_populates="patterns")
+    components = relationship(
+        "ArchitecturePatternComponent", back_populates="pattern", cascade="all, delete-orphan"
+    )
+
+
+class ArchitecturePatternComponent(Base):
+    __tablename__ = "architecture_pattern_components"
+
+    id = Column(Integer, primary_key=True)
+    pattern_id = Column(Integer, ForeignKey("architecture_patterns.id"), nullable=False)
+    layer = Column(String(30), nullable=False)
+    component_name = Column(String(100), nullable=False)
+    description = Column(Text)
+
+    pattern = relationship("ArchitecturePattern", back_populates="components")
 
 
 class RiskScore(Base):

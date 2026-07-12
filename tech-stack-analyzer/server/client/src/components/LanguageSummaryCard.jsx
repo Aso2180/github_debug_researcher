@@ -7,9 +7,10 @@ const LANG_COLORS = {
 };
 
 export default function LanguageSummaryCard({ data, onClick }) {
-  const { language, repoCount, avgRisk } = data;
+  const { language, repoCount, avgRisk, minRisk, maxRisk, highRiskCount } = data;
   const color = LANG_COLORS[language] || '#64748b';
   const risk = Number(avgRisk);
+  const hasRange = minRisk !== undefined && maxRisk !== undefined;
 
   return (
     <div
@@ -37,6 +38,40 @@ export default function LanguageSummaryCard({ data, onClick }) {
           <div style={{ fontSize: 20, fontWeight: 700, color: riskColor(risk) }}>{risk.toFixed(3)}</div>
         </div>
       </div>
+      {/* 平均だけだと個々のリポジトリのばらつきが隠れてしまう(「最大公約数」化)ため、
+          min〜maxの範囲バーと、平均の色に関わらず要注意リポジトリの有無を示すバッジを追加する。 */}
+      {hasRange && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ position: 'relative', height: 4, borderRadius: 2, background: '#334155' }}>
+            <div
+              style={{
+                position: 'absolute', left: `${minRisk * 100}%`, width: `${Math.max(2, (maxRisk - minRisk) * 100)}%`,
+                height: 4, borderRadius: 2, background: '#64748b',
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute', left: `${risk * 100}%`, top: -2, width: 8, height: 8, borderRadius: '50%',
+                background: riskColor(risk), border: '1px solid #0f172a', transform: 'translateX(-50%)',
+              }}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#475569', marginTop: 3 }}>
+            <span>min {minRisk.toFixed(2)}</span>
+            <span>max {maxRisk.toFixed(2)}</span>
+          </div>
+        </div>
+      )}
+      {highRiskCount > 0 && (
+        <div
+          style={{
+            marginTop: 8, fontSize: 11, fontWeight: 600, color: '#ef4444',
+            background: '#ef444422', borderRadius: 4, padding: '3px 8px', display: 'inline-block',
+          }}
+        >
+          ⚠ {highRiskCount}件が要注意
+        </div>
+      )}
     </div>
   );
 }

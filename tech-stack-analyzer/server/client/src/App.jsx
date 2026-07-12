@@ -5,6 +5,7 @@ import RiskRanking from './pages/RiskRanking.jsx';
 import RepoDetail from './pages/RepoDetail.jsx';
 import ProjectPlanner from './pages/ProjectPlanner.jsx';
 import LanguageGraph from './pages/LanguageGraph.jsx';
+import Guide from './pages/Guide.jsx';
 
 const NAV_H = 56;
 
@@ -32,6 +33,7 @@ function Nav() {
       <NavLink to="/risk-ranking">リスクランキング</NavLink>
       <NavLink to="/language-graph">言語関係グラフ</NavLink>
       <NavLink to="/planner">プランナー</NavLink>
+      <NavLink to="/guide">アーキテクチャガイド</NavLink>
     </nav>
   );
 }
@@ -47,6 +49,7 @@ export default function App() {
           <Route path="/repos/:id" element={<RepoDetail />} />
           <Route path="/language-graph" element={<LanguageGraph />} />
           <Route path="/planner" element={<ProjectPlanner />} />
+          <Route path="/guide" element={<Guide />} />
         </Routes>
       </div>
     </BrowserRouter>
